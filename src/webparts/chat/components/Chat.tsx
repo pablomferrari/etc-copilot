@@ -295,12 +295,27 @@ const Chat: React.FC<IChatProps> = (props) => {
   const [allChats, setAllChats] = React.useState<IStoredChat[]>([]);
   const [chats, setChats] = React.useState<IStoredChat[]>([]);
   const [currentChatId, setCurrentChatIdState] = React.useState<string | null>(() => getCurrentChatId());
-  const [sidebarOpen, setSidebarOpen] = React.useState(true);
+  const [sidebarOpen, setSidebarOpen] = React.useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches ? false : true
+  );
   const [sidebarMenuOpen, setSidebarMenuOpen] = React.useState<string | null>(null);
   const [dropdownAnchor, setDropdownAnchor] = React.useState<{ top: number; left: number; bottom: number } | null>(null);
   const [storageLoading, setStorageLoading] = React.useState(useSharePoint);
+  const [isMobile, setIsMobile] = React.useState(() =>
+    typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
+  );
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
+
+  React.useEffect(() => {
+    const mq = window.matchMedia('(max-width: 768px)');
+    const update = (): void => {
+      setIsMobile(mq.matches);
+      if (mq.matches) setSidebarOpen((o) => (o ? false : o));
+    };
+    mq.addEventListener('change', update);
+    return () => mq.removeEventListener('change', update);
+  }, []);
 
   const setCurrentProjectId = React.useCallback((id: string | null) => {
     setCurrentProjectIdState(id);
@@ -872,6 +887,7 @@ const Chat: React.FC<IChatProps> = (props) => {
     setSidebarMenuOpen(null);
     setDropdownAnchor(null);
     setCurrentChatId(chat.id);
+    if (isMobile) setSidebarOpen(false);
   };
 
   React.useEffect(() => {
@@ -1006,6 +1022,16 @@ const Chat: React.FC<IChatProps> = (props) => {
 
   return (
     <section className={styles.chat}>
+      {sidebarOpen && isMobile && (
+        <div
+          className={styles.sidebarBackdrop}
+          onClick={() => setSidebarOpen(false)}
+          role="button"
+          tabIndex={0}
+          aria-label="Close menu"
+          onKeyDown={(e) => e.key === 'Enter' && setSidebarOpen(false)}
+        />
+      )}
       {sidebarOpen && (
         <aside className={styles.sidebar}>
           {storageLoading && (
@@ -1025,7 +1051,7 @@ const Chat: React.FC<IChatProps> = (props) => {
                   <button
                     type="button"
                     className={styles.sidebarItem + (p.id === currentProjectId ? ' ' + styles.sidebarItemActive : '')}
-                    onClick={() => { setSidebarMenuOpen(null); setDropdownAnchor(null); setCurrentProjectId(p.id); }}
+                    onClick={() => { setSidebarMenuOpen(null); setDropdownAnchor(null); setCurrentProjectId(p.id); if (isMobile) setSidebarOpen(false); }}
                   >
                     {p.name}
                   </button>

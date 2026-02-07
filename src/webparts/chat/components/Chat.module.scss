@@ -13,6 +13,10 @@
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
+.sidebarBackdrop {
+  display: none;
+}
+
 .sidebar {
   flex-shrink: 0;
   width: 220px;
@@ -21,6 +25,29 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+}
+
+@media (max-width: 768px) {
+  .sidebarBackdrop {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.4);
+    z-index: 999;
+    cursor: pointer;
+  }
+
+  .sidebar {
+    position: fixed;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 280px;
+    max-width: 85vw;
+    z-index: 1000;
+    border-right: 1px solid var(--neutralLight, #edebe9);
+    box-shadow: 4px 0 16px rgba(0, 0, 0, 0.15);
+  }
 }
 
 .sidebarLoading {
