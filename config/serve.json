@@ -1,0 +1,25 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx-build/spfx-serve.schema.json",
+  "port": 4321,
+  "https": true,
+  "serveConfigurations": {
+    "default": {
+      "pageUrl": "https://environmentatestingandconsu.sharepoint.com/sites/copilot/SitePages/CollabHome.aspx",
+      "customActions": {
+        "e3a0a2b2-1c2d-4e5f-a6b7-8c9d0e1f2a3b": {
+          "location": "ClientSideExtension.ApplicationCustomizer",
+          "properties": {}
+        }
+      }
+    },
+    "chatWebPart": {
+      "pageUrl": "https://environmentatestingandconsu.sharepoint.com/sites/copilot/SitePages/CollabHome.aspx",
+      "customActions": {
+        "e3a0a2b2-1c2d-4e5f-a6b7-8c9d0e1f2a3b": {
+          "location": "ClientSideExtension.ApplicationCustomizer",
+          "properties": {}
+        }
+      }
+    }
+  }
+}

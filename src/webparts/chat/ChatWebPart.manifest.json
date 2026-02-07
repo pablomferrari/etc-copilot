@@ -1,0 +1,20 @@
+{
+  "$schema": "https://developer.microsoft.com/json-schemas/spfx/client-side-web-part-manifest.schema.json",
+  "id": "e3a0a2b2-1c2d-4e5f-a6b7-8c9d0e1f2a3b",
+  "alias": "ChatWebPart",
+  "componentType": "WebPart",
+  "version": "1.0.0",
+  "manifestVersion": 2,
+  "requiresCustomScript": false,
+  "supportedHosts": ["SharePointWebPart", "TeamsPersonalApp", "TeamsTab"],
+  "preconfiguredEntries": [{
+    "groupId": "5c03119e-3074-46fd-976b-c60198311f70",
+    "group": { "default": "Advanced" },
+    "title": { "default": "Chat" },
+    "description": { "default": "Chat with AI (OpenAI). Key can be set in web part properties or a config list." },
+    "officeFabricIconFontName": "Chat",
+    "properties": {
+      "apiKey": ""
+    }
+  }]
+}

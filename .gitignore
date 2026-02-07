@@ -1,0 +1,31 @@
+# Dependencies
+node_modules/
+
+# Build output
+lib/
+dist/
+temp/
+release/
+
+# Solution package (generate with gulp package-solution --ship)
+sharepoint/solution/*.sppkg
+
+# Debug manifests (generated)
+sharepoint/solution/debug/
+
+# Logs and debug
+*.log
+npm-debug.log*
+logs/
+
+# OS and IDE
+.DS_Store
+Thumbs.db
+.vs/
+*.suo
+*.user
+
+# Optional
+coverage/
+.nyc_output/
+*.tsbuildinfo
