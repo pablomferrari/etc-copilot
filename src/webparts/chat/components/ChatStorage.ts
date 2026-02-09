@@ -9,6 +9,32 @@ const KEY_PROJECTS = 'chat2etc_projects';
 const KEY_CHATS = 'chat2etc_chats';
 const KEY_CURRENT_PROJECT = 'chat2etc_currentProject';
 const KEY_CURRENT_CHAT = 'chat2etc_currentChat';
+const KEY_SAVED_PROMPTS = 'chat2etc_savedPrompts';
+
+export interface ISavedPrompt {
+  id: string;
+  name: string;
+  text: string;
+}
+
+export function getSavedPrompts(): ISavedPrompt[] {
+  try {
+    const raw = localStorage.getItem(KEY_SAVED_PROMPTS);
+    if (!raw) return [];
+    const list = JSON.parse(raw) as ISavedPrompt[];
+    return Array.isArray(list) ? list : [];
+  } catch {
+    return [];
+  }
+}
+
+export function saveSavedPrompts(prompts: ISavedPrompt[]): void {
+  try {
+    localStorage.setItem(KEY_SAVED_PROMPTS, JSON.stringify(prompts));
+  } catch {
+    // ignore
+  }
+}
 
 export function getProjects(): IProject[] {
   try {

@@ -12,7 +12,10 @@ import {
   getCurrentChatId,
   setCurrentChatId as persistChatId,
   messageToStored,
-  storedToMessage
+  storedToMessage,
+  getSavedPrompts,
+  saveSavedPrompts,
+  type ISavedPrompt
 } from './ChatStorage';
 import {
   getProjectsFromLibrary,
@@ -304,6 +307,9 @@ const Chat: React.FC<IChatProps> = (props) => {
   const [isMobile, setIsMobile] = React.useState(() =>
     typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches
   );
+  const [savedPrompts, setSavedPrompts] = React.useState<ISavedPrompt[]>(() => getSavedPrompts());
+  const [promptsMenuOpen, setPromptsMenuOpen] = React.useState(false);
+  const promptsMenuRef = React.useRef<HTMLDivElement>(null);
   const messagesEndRef = React.useRef<HTMLDivElement>(null);
   const dropdownRef = React.useRef<HTMLDivElement>(null);
 
@@ -654,7 +660,7 @@ const Chat: React.FC<IChatProps> = (props) => {
       if (hasAttachedFileContent) {
         apiMessages.unshift({
           role: 'system',
-          content: 'The user can attach files. When they do, the full text content of supported files (PDF, Word, Excel, text) is included in the user message under "Attached files:" with the format "--- filename ---" followed by the content. Use that content to answer. Do not say you cannot view or access the files when this content is present.'
+          content: 'The user can attach files. When they do, the full text content of attached files is included in the user message under "Attached files:" with the format "--- filename ---" followed by the content. Use that content to answer. Do not say you cannot view or access the files when this content is present.'
         });
       }
       const hasUnsupportedAttachments = !hasAttachedFileContent && apiMessages.some((m) => {
@@ -665,7 +671,7 @@ const Chat: React.FC<IChatProps> = (props) => {
       if (hasUnsupportedAttachments) {
         apiMessages.unshift({
           role: 'system',
-          content: 'The user attached files but text extraction failed (e.g. PDF in browser), so you only see "(Also attached; content not extracted: ...)". Do not say you cannot access attachments. Instead, ask the user to paste the relevant text into the chat or to try a different format (e.g. .txt), or suggest using a backend that can extract PDFs.'
+          content: 'The user attached files but text extraction failed, so you only see "(Also attached; content not extracted: ...)". Do not say you cannot access attachments. Instead, ask the user to paste the relevant text into the chat or to try a different format.'
         });
       }
       const hasImages = apiMessages.some((m) => {
@@ -901,6 +907,41 @@ const Chat: React.FC<IChatProps> = (props) => {
     document.addEventListener('click', onDocClick);
     return () => document.removeEventListener('click', onDocClick);
   }, [sidebarMenuOpen]);
+
+  React.useEffect(() => {
+    if (!promptsMenuOpen) return;
+    const onDocClick = (e: MouseEvent): void => {
+      if (promptsMenuRef.current && !promptsMenuRef.current.contains(e.target as Node)) {
+        setPromptsMenuOpen(false);
+      }
+    };
+    document.addEventListener('click', onDocClick);
+    return () => document.removeEventListener('click', onDocClick);
+  }, [promptsMenuOpen]);
+
+  const saveCurrentAsPrompt = (): void => {
+    const text = input.trim();
+    if (!text) return;
+    const name = window.prompt('Name for this prompt', text.slice(0, 50) + (text.length > 50 ? '…' : ''));
+    if (!name?.trim()) return;
+    const newPrompt: ISavedPrompt = { id: generateId(), name: name.trim(), text };
+    const next = [...savedPrompts, newPrompt];
+    saveSavedPrompts(next);
+    setSavedPrompts(next);
+    setPromptsMenuOpen(false);
+  };
+
+  const usePrompt = (p: ISavedPrompt): void => {
+    setInput(p.text);
+    setPromptsMenuOpen(false);
+  };
+
+  const deleteSavedPrompt = (p: ISavedPrompt, e: React.MouseEvent): void => {
+    e.stopPropagation();
+    const next = savedPrompts.filter((x) => x.id !== p.id);
+    saveSavedPrompts(next);
+    setSavedPrompts(next);
+  };
 
   const handleRenameProject = (p: IProject): void => {
     setSidebarMenuOpen(null);
@@ -1181,7 +1222,7 @@ const Chat: React.FC<IChatProps> = (props) => {
       <div className={styles.messages}>
         {messages.length === 0 && (
           <div className={styles.welcome}>
-            Type a message or attach files below. Supported: PDF, Word (.docx), Excel (.xlsx, .xls), text (.txt, .md, .csv, .json, .log, .yml, .rtf, .sql, .ini, .env, etc.), and images. You can attach multiple files.
+            Type a message or attach files below.
           </div>
         )}
         {messages.map((msg) => (
@@ -1294,13 +1335,53 @@ const Chat: React.FC<IChatProps> = (props) => {
             onChange={onFileChange}
             aria-label="Upload files"
             disabled={loading}
-            title="Upload files (images or documents)"
+            title="Upload files"
           />
           <span className={styles.attachButton} aria-hidden>
             <svg className={styles.attachIcon} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
               <path d="M21.44 11.05l-9.19 9.19a6 6 0 01-8.49-8.49l9.19-9.19a4 4 0 015.66 5.66l-9.2 9.19a2 2 0 01-2.83-2.83l8.49-8.48" />
             </svg>
           </span>
+        </div>
+        <div className={styles.promptsWrap} ref={promptsMenuRef}>
+          <button
+            type="button"
+            className={styles.promptsBtn + (input.trim().length > 0 ? ' ' + styles.promptsBtnHasDraft : '')}
+            onClick={() => setPromptsMenuOpen((o) => !o)}
+            title={input.trim().length > 0 ? 'You have a message to save as a prompt' : 'Saved prompts'}
+            aria-label="Saved prompts"
+            aria-expanded={promptsMenuOpen ? 'true' : 'false'}
+            disabled={loading}
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M19 21l-7-5-7 5V5a2 2 0 012-2h10a2 2 0 012 2z" />
+            </svg>
+            <span className={styles.promptsBtnText}>Prompts</span>
+          </button>
+          {promptsMenuOpen && (
+            <div className={styles.promptsDropdown}>
+              <button
+                type="button"
+                className={styles.promptsDropdownSave}
+                onClick={saveCurrentAsPrompt}
+                disabled={input.trim().length === 0}
+                title={input.trim().length === 0 ? 'Type a message in the box below first' : 'Save the current message as a reusable prompt'}
+              >
+                Save current as prompt
+              </button>
+              {savedPrompts.length === 0 && (
+                <div className={styles.promptsDropdownEmpty}>No saved prompts yet. Type a message below, then click &quot;Save current as prompt&quot; above to add one.</div>
+              )}
+              {savedPrompts.map((p) => (
+                <div key={p.id} className={styles.promptsDropdownItem}>
+                  <button type="button" className={styles.promptsDropdownItemBtn} onClick={() => usePrompt(p)} title={p.text}>
+                    <span className={styles.promptsDropdownItemName}>{p.name}</span>
+                  </button>
+                  <button type="button" className={styles.promptsDropdownItemDel} onClick={(e) => deleteSavedPrompt(p, e)} aria-label="Delete prompt">×</button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
         <textarea
           ref={textareaRef}
