@@ -397,12 +397,11 @@ const Chat: React.FC<IChatProps> = (props) => {
     const all = useSharePoint ? allChats : getAllChats();
     const chat = all.find((c) => c.id === currentChatId);
     if (chat) {
-      // First chat of a project: we just created it with messages: []. Don't overwrite current state (user message + placeholder).
-      if (chat.messages.length > 0) {
-        setMessages(chat.messages.map(storedToMessage));
-      }
+      // Always set messages when selecting a chat so we show the correct conversation (including empty for new chats)
+      setMessages(chat.messages.length > 0 ? chat.messages.map(storedToMessage) : []);
+    } else {
+      // Chat not in list yet (e.g. SharePoint save still in flight); leave current messages so new-chat flow isn't cleared
     }
-    // When chat not found: do not clear (e.g. SharePoint: not in allChats yet). When found but 0 messages: newly created, don't wipe.
   }, [currentChatId, useSharePoint, allChats]);
 
   const persistCurrentChat = React.useCallback((msgs: IChatMessage[], title?: string) => {

@@ -54,8 +54,9 @@ async function getMyFileItems(config: IChatStorageSharePointConfig): Promise<{ N
 }
 
 async function getFileContent(config: IChatStorageSharePointConfig, serverRelativeUrl: string): Promise<string> {
-  const encoded = encodeURIComponent(serverRelativeUrl);
-  const url = `${config.webAbsoluteUrl}/_api/web/GetFileByServerRelativeUrl('${serverRelativeUrl.replace(/'/g, "''")}')/$value`;
+  // Use GetFileByServerRelativePath (recommended for SharePoint Online); decodedurl is the path, URL-encoded in the request
+  const decodedUrl = encodeURIComponent(serverRelativeUrl);
+  const url = `${config.webAbsoluteUrl}/_api/web/GetFileByServerRelativePath(decodedurl='${decodedUrl}')/$value`;
   const res = await config.spHttpClient.get(url, SPHttpClient.configurations.v1);
   if (!res.ok) return '';
   return await res.text();
